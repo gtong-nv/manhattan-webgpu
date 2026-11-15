@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#17242d" />
+  <meta name="description" content="Explore all of Manhattan in an interactive isometric city, with real NYC buildings, WebGPU rendering and streamed levels of detail." />
+  <title>Manhattan — Isometric City</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%232a4658'/%3E%3Cpath d='M12 48V29h11V17h7V8h6v15h9v13h7v12Z' fill='%23d7c8a4'/%3E%3C/svg%3E" />
+</head>
+<body>
+<main id="app">
+  <div id="viewport"></div>
+  <header class="toolbar">
+    <a class="brand" href="#" id="home-link"><svg width="25" height="26" viewBox="0 0 30 30" fill="currentColor" aria-hidden="true"><path d="M2 27V14h5v13h2V8h4V2h3v6h4v19h2V12h6v15Z"/></svg><div><h1>MANHATTAN</h1><span>ISOMETRIC CITY</span></div></a>
+    <span class="toolbar-divider"></span>
+    <label class="neighborhood-label" for="neighborhood">Explore</label>
+    <select id="neighborhood" aria-label="Explore a neighborhood">
+      <option value="midtown">Midtown</option><option value="downtown">Lower Manhattan</option><option value="village">Greenwich Village</option><option value="park">Central Park</option><option value="harlem">Harlem</option><option value="inwood">Inwood</option><option value="overview">All Manhattan</option>
+    </select>
+    <div class="toolbar-spacer"></div>
+    <span id="backend-badge" class="backend-badge">INITIALIZING</span>
+    <button id="settings-toggle" aria-label="World settings" aria-expanded="false" aria-controls="settings">☷</button>
+    <button id="about-toggle" aria-label="About the world and its data">i</button>
+  </header>
+
+  <section id="settings" class="panel settings" hidden aria-label="World settings">
+    <div class="panel-heading"><h2>World settings</h2><button id="settings-close" aria-label="Close settings">×</button></div>
+    <label class="range-label" for="sunlight">Sunlight <output id="time-label">14:00</output></label>
+    <input id="sunlight" type="range" min="7" max="20" step="0.25" value="14" />
+    <div class="range-ends"><span>Morning</span><span>Evening</span></div>
+    <label class="switch-row"><span>Moving traffic<small>Simulated on mapped streets</small></span><input id="traffic" type="checkbox" checked /></label>
+    <label class="switch-row"><span>Mapped trees<small>Detailed neighborhood tiles</small></span><input id="greenery" type="checkbox" checked /></label>
+    <label class="switch-row"><span>Pixel finish<small>Crisp, larger screen pixels</small></span><input id="pixels" type="checkbox" /></label>
+    <label class="switch-row"><span>Ambient occlusion<small>Depth around roofs and streets</small></span><input id="occlusion" type="checkbox" checked /></label>
+    <p class="settings-note">Detail streams in as you zoom. Nearby buildings have facade textures, setbacks and rooftop equipment.</p>
+  </section>
+
+  <aside id="inspector" class="panel inspector" hidden aria-live="polite">
+    <div class="panel-heading"><span class="eyebrow">BUILDING INSPECTOR</span><button id="clear-selection" aria-label="Close building inspector">×</button></div>
+    <h2 id="inspect-title"></h2><div id="building-details"></div>
+    <p class="inspector-note">Real footprint and source height. Facades and roof details are artistic interpretations.</p>
+  </aside>
+
+  <aside class="map-corner panel">
+    <div class="map-heading"><span>MANHATTAN</span><button id="overview-view" title="View all Manhattan" aria-label="View all Manhattan">⤢</button></div>
+    <canvas id="minimap" width="360" height="440" tabindex="0" role="button" aria-label="Manhattan map. Click to explore, or press Enter for the whole island."></canvas>
+    <div class="map-caption"><span id="map-location">MIDTOWN</span><span id="compass-needle">↑ N</span></div>
+  </aside>
+
+  <div class="world-caption"><span class="eyebrow">A REAL CITY, REIMAGINED</span><span><b id="building-count">—</b> buildings · <b id="tree-count">—</b> mapped trees</span></div>
+  <nav class="view-controls panel" aria-label="Camera controls">
+    <button id="rotate-left" aria-label="Rotate left 90 degrees" title="Rotate left (Q)">↶</button>
+    <span class="control-divider"></span>
+    <button id="zoom-out" aria-label="Zoom out" title="Zoom out (−)">−</button>
+    <button id="reset-view" aria-label="Reset view" title="Midtown (R)">⌂</button>
+    <button id="zoom-in" aria-label="Zoom in" title="Zoom in (+)">+</button>
+    <span class="control-divider"></span>
+    <button id="rotate-right" aria-label="Rotate right 90 degrees" title="Rotate right (E)">↷</button>
+  </nav>
+  <div class="gesture-hint">Drag to pan <span>·</span> Right-drag to orbit <span>·</span> Scroll to zoom <span>·</span> Click to inspect</div>
+  <footer><span>Geography: NYC Open Data</span><span id="render-status">Loading the city…</span></footer>
+  <div id="stream-status" role="status" hidden></div>
+  <div id="backend-notice" class="backend-notice" hidden></div>
+
+  <div id="loading" class="loading-screen" role="status"><div class="loading-symbol">▥</div><h2>A whole island of stories.</h2><p id="loading-detail">Preparing Manhattan’s real-world geography…</p><div class="loading-bar"><i></i></div><span>MANHATTAN · NEW YORK CITY</span></div>
+  <div id="error" class="error-screen" hidden role="alert"><h2>The city couldn’t start.</h2><p id="error-detail"></p><button onclick="location.reload()">Try again</button></div>
+
+  <dialog id="about-dialog" aria-labelledby="about-title">
+    <button id="about-close" class="dialog-close" aria-label="Close about dialog">×</button><span class="eyebrow">BEHIND THE CITY</span><h2 id="about-title">Manhattan, block by block.</h2>
+    <p>Explore the entire Manhattan borough, from the Battery to Inwood, including its mapped islands. Buildings, street centerlines, shoreline, parks and tree locations come from official NYC datasets.</p>
+    <p>The world renders with Three.js WebGPU. Buildings stream in as 500 m, 1 km and 2 km tiles; close views add textured facades, architectural setbacks, rooftop equipment, trees and traffic. An orthographic camera, directional shadows, ambient occlusion and crisp edges give it an isometric city-game finish.</p>
+    <p>Footprints and available roof heights follow the data. Facades, setbacks, crowns, roof props and cars are procedural interpretations. Traffic is simulated, terrain is flat, and park boundaries describe properties rather than exact grass cover. Neighboring NYC boroughs are shown as unmodeled context; the New Jersey shore is outside this dataset.</p>
+    <h3>Source geography</h3><ul id="source-list"></ul><p class="about-note" id="data-notes"></p>
+    <p class="about-note">Inspired by <a href="https://cannoneyed.com/projects/isometric-nyc" target="_blank" rel="noreferrer">Isometric NYC</a>. This is an interactive 3D interpretation with original procedural artwork; the reference uses generated 2D imagery.</p>
+    <div id="technical-stats" class="technical-stats"></div>
+  </dialog>
+</main>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

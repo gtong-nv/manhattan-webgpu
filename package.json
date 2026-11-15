@@ -1,0 +1,23 @@
+{
+  "name": "lower-manhattan-living-atlas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "playwright test",
+    "data": "python3 scripts/build_manhattan.py",
+    "data:pilot": "python3 scripts/download_city.py",
+    "data:validate": "python3 scripts/validate_manhattan.py",
+    "serve": "python3 scripts/serve.py"
+  },
+  "dependencies": {
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "vite": "8.3.8",
+    "@playwright/test": "1.58.2"
+  }
+}

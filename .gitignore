@@ -1,0 +1,14 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+.DS_Store
+scripts/__pycache__/
+data-cache/
+.venv/
+.hosting/
+dist-next/
+/preview-*.png
+.env
+.env.*
+!.env.example
